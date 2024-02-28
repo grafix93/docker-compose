@@ -1,0 +1,44 @@
+version: '3'
+
+x-environment: &default_environment
+  WORDPRESS_DB_HOST: ${DB_HOST}
+  WORDPRESS_DB_USER: ${DB_USER}
+  WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+  WORDPRESS_DB_NAME: ${DB_NAME}
+  WORDPRESS_DB_TIMEOUT: 60
+  WORDPRESS_SSL: 'true'
+  WORDPRESS_SSL_CERT: "${SSL_VOLUME_PATH}/self-signed.crt"
+  WORDPRESS_SSL_KEY: "${SSL_VOLUME_PATH}/self-signed.key"
+  WORDPRESS_PORT: ${WORDPRESS_PORT}
+  MYSQL_VOLUME_PATH: ${MYSQL_VOLUME_PATH}
+  HTML_VOLUME_PATH: ${HTML_VOLUME_PATH}
+  SSL_VOLUME_PATH: ${SSL_VOLUME_PATH}
+
+networks:
+  my_network:
+    driver: bridge
+
+services:
+  wordpress1:
+    image: wordpress
+    ports:
+      - "${WORDPRESS_PORT}:80"
+    environment:
+      <<: *default_environment
+    depends_on:
+      - db
+    networks:
+      - my_network
+    volumes:
+      - ${HTML_VOLUME_PATH}:/var/www/html
+      - ${SSL_VOLUME_PATH}:/etc/ssl
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    networks:
+      - my_network
+    volumes:
+      - ${MYSQL_VOLUME_PATH}:/var/lib/mysql
